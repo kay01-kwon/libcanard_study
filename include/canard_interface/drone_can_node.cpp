@@ -12,7 +12,7 @@ void DroneCanNode::start_node(const char *interface_name)
 
     send_NodeStatus();
 
-    canard_iface_.process(1000);
+    canard_iface_.process(10);
 
     /*
       Run the main loop.
@@ -46,17 +46,17 @@ void DroneCanNode::handle_EscStatus(const CanardRxTransfer &transfer,
 const uavcan_equipment_esc_Status &msg)
 {
 
-    // printf("ESC index: %u\n", msg.esc_index);
-    // printf("Voltage: %f\n", msg.voltage);
-    // printf("Current: %f\n", msg.current);
-    // printf("Temperature: %f\n", msg.temperature);
-    // printf("ESC RPM: %u\n", msg.rpm);
-    // printf("Error count: %u\n", msg.error_count);
-    // printf("*****************************\n");
-    // rpm_cmd_.rpm.data[0] = 6000;
-    // rpm_cmd_.rpm.len = 1;
+    printf("ESC index: %u\n", msg.esc_index);
+    printf("Voltage: %f\n", msg.voltage);
+    printf("Current: %f\n", msg.current);
+    printf("Temperature: %f\n", msg.temperature);
+    printf("ESC RPM: %u\n", msg.rpm);
+    printf("Error count: %u\n", msg.error_count);
+    printf("*****************************\n");
+    rpm_cmd_.rpm.data[0] = 6000;
+    rpm_cmd_.rpm.len = 1;
 
-    // esc_rpm_pub_.broadcast(rpm_cmd_);
+    esc_rpm_pub_.broadcast(rpm_cmd_);
 }
 void DroneCanNode::handle_GetNodeInfo(const CanardRxTransfer &transfer, 
 const uavcan_protocol_GetNodeInfoResponse &rsp)
