@@ -1,5 +1,8 @@
 #include "canard_interface.hpp"
 
+DEFINE_HANDLER_LIST_HEADS();
+DEFINE_TRANSFER_OBJECT_HEADS();
+
 void CanardInterface::init(const char *interface_name)
 {
     int16_t result = socketcanInit(&socketcan_, interface_name);
@@ -49,7 +52,7 @@ const Canard::Transfer &transfer)
         .payload_len = uint16_t(transfer.payload_len),
     };
 
-    return canardRequestOrRespondObj;
+    return canardRequestOrRespondObj(&canard_, dest_node_id, &tx_transfer_) > 0; 
 }
 
 bool CanardInterface::respond(uint8_t dest_node_id, const Canard::Transfer &transfer)
