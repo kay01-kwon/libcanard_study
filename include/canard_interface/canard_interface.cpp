@@ -68,10 +68,35 @@ bool CanardInterface::respond(uint8_t dest_node_id, const Canard::Transfer &tran
 
 void CanardInterface::process(uint32_t duration_ms)
 {
+    for(const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&canard_)) != NULL;)
+    {
+        const int16_t tx_res = socketcanTransmit(&socketcan_, txf, 0);
+        if(tx_res != 0)
+        {
+            canardPopTxQueue(&canard_);
+        }
+    }
+
+    CanardCANFrame rx_frame;
+
+    const uint64_t timestamp = micros64();
+    const int16_t rx_res = socketcanReceive(&socketcan_, &rx_frame, duration_ms);
+
+    if(rx_res > 0)
+    {
+        canardHandleRxFrame(&canard_, &rx_frame, timestamp);
+    }
+    else if(rx_res < 0)
+    {
+        std::cerr << "Receive error " << rx_res << ", errno '" << strerror(errno) << "'" << std::endl;
+    }
+
 }
 
 void CanardInterface::onTransferReceived(CanardInstance *ins, CanardRxTransfer *transfer)
 {
+    CanardInterface *iface = (CanardInterface *)ins->user_reference;
+    iface->handle_message(*transfer);
 }
 
 bool CanardInterface::shouldAcceptTransfer(const CanardInstance *ins, 
@@ -80,5 +105,6 @@ uint16_t data_type_id,
 CanardTransferType transfer_type, 
 uint8_t source_node_id)
 {
-    return false;
+    CanardInterface *iface = (CanardInterface *)ins->user_reference;
+    return iface->accept_message(data_type_id, *out_data_type_signature);
 }

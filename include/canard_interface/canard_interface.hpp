@@ -1,7 +1,7 @@
 #ifndef CANARD_INTERFACE_HPP
 #define CANARD_INTERFACE_HPP
 
-#include "node.hpp"
+#include "drone_can_node.hpp"
 
 class CanardInterface : public Canard::Interface{
 
