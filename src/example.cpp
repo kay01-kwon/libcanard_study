@@ -114,21 +114,18 @@ private:
 
     // declare publishers for outgoing messages
     Canard::Publisher<uavcan_protocol_NodeStatus> node_status{canard_iface};
-    Canard::Publisher<uavcan_equipment_esc_Status> esc_status{canard_iface};
     Canard::Publisher<uavcan_equipment_esc_RPMCommand> rpm_pub{canard_iface};
+
+    void handle_EscStatus(const CanardRxTransfer& transfer, const uavcan_equipment_esc_Status& msg);
+    Canard::ObjCallback<ESCNode, uavcan_equipment_esc_Status> esc_status_cb{this, &ESCNode::handle_EscStatus};
+    Canard::Subscriber<uavcan_equipment_esc_Status> esc_status_sub{esc_status_cb, 0};
 
     void handle_GetNodeInfo(const CanardRxTransfer& transfer, const uavcan_protocol_GetNodeInfoResponse& rsp);
     Canard::ObjCallback<ESCNode, uavcan_protocol_GetNodeInfoResponse> get_node_info_cb{this, &ESCNode::handle_GetNodeInfo};
     Canard::Client<uavcan_protocol_GetNodeInfoResponse> get_node_info_client{canard_iface, get_node_info_cb};
 
-    void handle_ParamExecuteOpcode(const CanardRxTransfer& transfer, const uavcan_protocol_param_ExecuteOpcodeResponse& rsp);
-    Canard::ObjCallback<ESCNode, uavcan_protocol_param_ExecuteOpcodeResponse> param_execute_cb{this, &ESCNode::handle_ParamExecuteOpcode};
-    Canard::Client<uavcan_protocol_param_ExecuteOpcodeResponse> param_execute_client{canard_iface, param_execute_cb};
-
-
     void send_NodeStatus(void);
     void process1HzTasks(uint64_t timestamp_usec);
-    void send_ESCStatus(void);
 
     /*
       keep the state of 4 ESCs, simulating a 4 in 1 ESC node
@@ -261,7 +258,29 @@ bool CanardInterface::respond(uint8_t destination_node_id, const Canard::Transfe
     return canardRequestOrRespondObj(&canard, destination_node_id, &tx_transfer) > 0;
 }
 
-void ESCNode::handle_GetNodeInfo(const CanardRxTransfer& transfer, const uavcan_protocol_GetNodeInfoResponse& rsp)
+void ESCNode::handle_EscStatus(const CanardRxTransfer &transfer, 
+const uavcan_equipment_esc_Status &msg)
+{   
+    printf("ESC index: %u\n", msg.esc_index);
+    printf("Voltage: %f\n", msg.voltage);
+    printf("Current: %f\n", msg.current);
+    printf("Temperature: %f\n", msg.temperature);
+    printf("RPM: %u\n", msg.rpm);
+    printf("Error count: %u\n", msg.error_count);
+    printf("*****************************\n");
+
+    uavcan_equipment_esc_RPMCommand rpm_cmd;
+
+    //
+    // rpm_cmd.rpm.data[0] = (int32_t)(8620.0/2200.0*2000.0); 
+    rpm_cmd.rpm.data[0] = 6000;
+    rpm_cmd.rpm.len = 1;
+
+    rpm_pub.broadcast(rpm_cmd);
+
+}
+
+void ESCNode::handle_GetNodeInfo(const CanardRxTransfer &transfer, const uavcan_protocol_GetNodeInfoResponse &rsp)
 {
     // (void)req;
     // uavcan_protocol_GetNodeInfoResponse rsp;
@@ -291,12 +310,6 @@ void ESCNode::handle_GetNodeInfo(const CanardRxTransfer& transfer, const uavcan_
 
 }
 
-void ESCNode::handle_ParamExecuteOpcode(const CanardRxTransfer& transfer, const uavcan_protocol_param_ExecuteOpcodeResponse& rsp)
-{
-    // (void)rsp;
-    // uavcan_protocol_param_ExecuteOpcodeResponse rsp {};
-
-}
 
 /*
   send the 1Hz NodeStatus message. This is what allows a node to show
@@ -323,27 +336,6 @@ void ESCNode::process1HzTasks(uint64_t timestamp_usec)
     send_NodeStatus();
 }
 
-/*
-  send ESC status at 50Hz
-*/
-void ESCNode::send_ESCStatus(void)
-{
-    // send a separate status packet for each ESC
-    for (uint8_t i=0; i<NUM_ESCS; i++) {
-        uavcan_equipment_esc_Status pkt {};
-
-        // make up some synthetic status data
-        pkt.error_count = 0;
-        pkt.voltage = 16.8 - 2.0 * escs[i].throttle;
-        pkt.current = 20 * escs[i].throttle;
-        pkt.temperature = 298.0;
-        pkt.rpm = 10000 * escs[i].throttle;
-        pkt.power_rating_pct = 100.0 * escs[i].throttle;
-
-        esc_status.broadcast(pkt);
-    }
-}
-
 
 /*
   Transmits all frames from the TX queue, receives up to one frame.
@@ -355,9 +347,6 @@ void CanardInterface::process(uint32_t timeout_msec)
         const int16_t tx_res = socketcanTransmit(&socketcan, txf, 0);
         if (tx_res != 0) {
             canardPopTxQueue(&canard);
-        }
-        else {
-            break;
         }
     }
 
@@ -443,14 +432,7 @@ void ESCNode::start_node(const char *interface_name)
       Run the main loop.
      */
     uint64_t next_1hz_service_at = micros64();
-    uint64_t next_50hz_service_at = micros64();
-
-    int32_t rpm = 10;
-
-    uavcan_equipment_esc_RPMCommand rpm_cmd;
-
-    rpm_cmd.rpm.data[0] = rpm;
-    rpm_cmd.rpm.len = 4;
+    // uint64_t next_50hz_service_at = micros64();
 
     uavcan_protocol_GetNodeInfoRequest req;
 
@@ -461,10 +443,6 @@ void ESCNode::start_node(const char *interface_name)
         canard_iface.process(10);
     }
     
-    rpm = 2000;
-
-    rpm_cmd.rpm.data[0] = rpm;
-    rpm_cmd.rpm.len = 4;
 
     while (true) {
 
@@ -472,15 +450,14 @@ void ESCNode::start_node(const char *interface_name)
 
 
         if (ts >= next_1hz_service_at) {
-            send_NodeStatus();
             next_1hz_service_at += 1000000ULL;
-        //     process1HzTasks(ts);
+            process1HzTasks(ts);
         }
-        if (ts >= next_50hz_service_at) {
-            next_50hz_service_at += 1000000ULL/100U;
-            rpm_pub.broadcast(rpm_cmd);
-        //     // printf("Broadcasting RPM: %d\n", rpm);
-        }
+        // if (ts >= next_50hz_service_at) {
+        //     next_50hz_service_at += 1000000ULL/100U;
+        //     // rpm_pub.broadcast(rpm_cmd);
+        // //     // printf("Broadcasting RPM: %d\n", rpm);
+        // }
         canard_iface.process(10);
     }
 }
