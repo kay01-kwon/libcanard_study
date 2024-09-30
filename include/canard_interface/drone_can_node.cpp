@@ -1,5 +1,7 @@
 #include "drone_can_node.hpp"
-#include "canard_interface.hpp"
+
+DEFINE_HANDLER_LIST_HEADS();
+DEFINE_TRANSFER_OBJECT_HEADS();
 
 void DroneCanNode::start_node(const char *interface_name)
 {

@@ -1,51 +1,7 @@
 #ifndef DRONE_CAN_NODE_HPP
 #define DRONE_CAN_NODE_HPP
-// system includes
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <assert.h>
-#include <errno.h>
-#include <stdbool.h>
-
-// include the canard C++ APIs
-#include "canard/publisher.h"
-#include "canard/subscriber.h"
-#include "canard/service_client.h"
-#include "canard/service_server.h"
-#include "canard/handler_list.h"
-#include "canard/transfer_object.h"
-
-// include the base canard API
-#include "canard_internals/canard.h"
-
-// include the interface
-#include "driver/socketcan.h"
-
 #include "dsdl_generated/dronecan_msgs.h"
-#include "canard_interface.hpp"
-
-static uint64_t micros64()
-{
-    static uint64_t first_us;
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    uint64_t tus = (uint64_t)ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
-    if(first_us == 0)
-    {
-        first_us = tus;
-    }
-
-    return tus - first_us;
-
-}
-
-static uint32_t millis32()
-{
-    return micros64() / 1000ULL;
-}
+#include "canard_interface/canard_interface.hpp"
 
 class CanardInterface;
 

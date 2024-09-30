@@ -12,7 +12,6 @@ set(CANARD_INCLUDE include)
 # Compiler flags
 add_definitions(-DDRONECAN_CXX_WRAPPERS)
 
-
 set(CANARD_SRC
     ${CANARD_INCLUDE}/canard_internals/canard.c
     ${CANARD_INCLUDE}/driver/socketcan.c
@@ -32,19 +31,16 @@ set(DSDL_GENERATED_SRC
     ${CANARD_INCLUDE}/dsdl_generated/uavcan.protocol.param.ExecuteOpcode_res.c
 )
 
-# # Include directories
+# Include directories
 include_directories(
-    include
-  ${CANARD_INCLUDE}/dsdl_generated
+  ${CANARD_INCLUDE}
   ${CANARD_INCLUDE}/canard_internals
   ${CANARD_INCLUDE}/driver
-  ${CANARD_INCLUDE}/canard_interface
+  ${CANARD_INCLUDE}/dsdl_generated
 )
 
-add_library(canard STATIC ${CANARD_SRC}) 
-
-
-add_library(dsdl_generated ${DSDL_GENERATED_SRC} ${CANARD_BASE})
+add_library(canard STATIC ${CANARD_SRC})
+add_library(dsdl_generated ${DSDL_GENERATED_SRC} ${CANARD_INCLUDE})
 
 # Target for ESC Node
 add_executable(esc_node 
