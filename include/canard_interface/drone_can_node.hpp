@@ -74,7 +74,7 @@ class DroneCanNode
         
         uavcan_protocol_NodeStatus node_status_msg_;
         uavcan_equipment_esc_RPMCommand rpm_cmd_;
-        
+
 };
 
 #endif // DRONECAN_NODE_HPP
