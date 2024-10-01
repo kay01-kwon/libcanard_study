@@ -37,7 +37,7 @@ Check the network
 ifconfig can0
 ```
 
-
+Navigate to the build folder and then execute the node
 
 ```
 ./esc_node can0

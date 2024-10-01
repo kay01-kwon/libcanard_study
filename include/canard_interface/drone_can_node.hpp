@@ -17,6 +17,7 @@ class DroneCanNode
         
         Canard::Publisher<uavcan_protocol_NodeStatus> node_status_pub_{canard_iface_};
         Canard::Publisher<uavcan_equipment_esc_RPMCommand> esc_rpm_pub_{canard_iface_};
+        Canard::Publisher<uavcan_equipment_esc_RawCommand> esc_raw_pub_{canard_iface_};
 
         void handle_EscStatus(const CanardRxTransfer& transfer, const uavcan_equipment_esc_Status& msg);
         Canard::ObjCallback<DroneCanNode, uavcan_equipment_esc_Status> esc_status_cb_{this, &DroneCanNode::handle_EscStatus};
@@ -30,6 +31,7 @@ class DroneCanNode
         
         uavcan_protocol_NodeStatus node_status_msg_;
         uavcan_equipment_esc_RPMCommand rpm_cmd_;
+        uavcan_equipment_esc_RawCommand raw_cmd_;
 
 };
 
