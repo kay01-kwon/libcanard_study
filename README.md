@@ -42,3 +42,7 @@ Navigate to the build folder and then execute the node
 ```
 ./esc_node can0
 ```
+
+## Execution result
+
+<img src="figures/maxon_esc_node_execution.png">
