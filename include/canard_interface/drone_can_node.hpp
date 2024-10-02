@@ -3,6 +3,8 @@
 #include "dsdl_generated/dronecan_msgs.h"
 #include "canard_interface/canard_interface.hpp"
 
+#define NUM_ESCS 4
+
 class CanardInterface;
 
 class DroneCanNode
@@ -28,10 +30,17 @@ class DroneCanNode
         Canard::Client<uavcan_protocol_GetNodeInfoResponse> get_node_info_client_{canard_iface_, get_node_info_cb_};
 
         void send_NodeStatus();
+
+        void broadcast_RPMCommand(int32_t rpm[NUM_ESCS]);
+
+        void broadcast_RawCommand(int16_t throttle[NUM_ESCS]);
         
         uavcan_protocol_NodeStatus node_status_msg_;
         uavcan_equipment_esc_RPMCommand rpm_cmd_;
         uavcan_equipment_esc_RawCommand raw_cmd_;
+
+        int32_t actual_rpm[4] = {0, 0, 0, 0};
+        int8_t esc_count_{0};
 
 };
 
