@@ -56,25 +56,29 @@ const uavcan_equipment_esc_Status &msg)
 {
     // int32_t rpm[4] = {4000, 5000, 5000, 5000};
     // int16_t raw_value = 8191;
-    int16_t raw_value = 10;
+    int16_t raw_value = 0;
     int16_t raw[4] = {raw_value, raw_value, raw_value, raw_value};
 
 
     switch(msg.esc_index) {
         case 0:
             actual_rpm[0] = msg.rpm;
+            actual_current[0] = msg.current;
             esc_count_++;
             break;
         case 1:
             actual_rpm[1] = msg.rpm;
+            actual_current[1] = msg.current;
             esc_count_++;
             break;
         case 2:
             actual_rpm[2] = msg.rpm;
+            actual_current[2] = msg.current;
             esc_count_++;
             break;
         case 3:
             actual_rpm[3] = msg.rpm;
+            actual_current[3] = msg.current;
             esc_count_++;
             break;
         default:
@@ -84,19 +88,19 @@ const uavcan_equipment_esc_Status &msg)
     if(esc_count_ == 4) {
         esc_count_ = 0;
 
+        printf("Voltage: %lf\n", msg.voltage);
+
+        printf("Current: %lf %lf %lf %lf\n",
+        actual_current[0],
+        actual_current[1],
+        actual_current[2],
+        actual_current[3]);
+
         printf("Actual RPM: %d %d %d %d\n", 
         actual_rpm[0],
         actual_rpm[1], 
         actual_rpm[2], 
         actual_rpm[3]);
-
-        // printf("Command RPM: %d %d %d %d\n",
-        // rpm[0],
-        // rpm[1],
-        // rpm[2],
-        // rpm[3]);
-
-        // broadcast_RPMCommand(rpm);
 
         printf("Command Raw: %d %d %d %d\n",
         raw[0],
@@ -105,6 +109,8 @@ const uavcan_equipment_esc_Status &msg)
         raw[3]);
 
         broadcast_RawCommand(raw);
+
+        printf("****************************************\n");
     }
     
 

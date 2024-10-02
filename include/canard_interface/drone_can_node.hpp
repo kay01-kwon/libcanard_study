@@ -40,6 +40,7 @@ class DroneCanNode
         uavcan_equipment_esc_RawCommand raw_cmd_;
 
         int32_t actual_rpm[4] = {0, 0, 0, 0};
+        float actual_current[4] = {0, 0, 0, 0};
         int8_t esc_count_{0};
 
 };

@@ -46,3 +46,5 @@ Navigate to the build folder and then execute the node
 ## Execution result
 
 <img src="figures/maxon_esc_node_execution.png">
+
+<img src="figures/Multiple_ESC_Control.png">
